@@ -1,0 +1,165 @@
+/* ===================== SETTINGS ===================== */
+.settings-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.settings-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    max-width: 860px;
+}
+
+.settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.settings-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.settings-section-title h3 {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* Profile top */
+.settings-profile-top {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Form grid reuse */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* WhatsApp status */
+.wa-settings-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px;
+    background: rgba(37, 211, 102, 0.05);
+    border: 1px solid rgba(37, 211, 102, 0.2);
+    border-radius: var(--radius-md);
+}
+
+.wa-dot-lg {
+    width: 10px;
+    height: 10px;
+    background: #25D366;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.2);
+    animation: pulse-glow 2s infinite;
+    flex-shrink: 0;
+}
+
+/* Toggle list */
+.settings-toggle-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.settings-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.settings-toggle-row:last-child {
+    border-bottom: none;
+}
+
+/* Toggle switch */
+.toggle {
+    width: 40px;
+    height: 22px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    position: relative;
+    cursor: pointer;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: var(--transition);
+}
+
+.toggle.on {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.toggle.on::after {
+    left: 21px;
+    background: #fff;
+}
+
+/* Row of 2 */
+.settings-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5);
+}
+
+/* Security */
+.security-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--accent);
+    padding: 8px 12px;
+    background: var(--accent-bg);
+    border-radius: var(--radius-md);
+}
+
+/* API */
+.api-key-box {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.api-key-display {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+}

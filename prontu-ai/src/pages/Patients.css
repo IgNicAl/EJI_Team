@@ -1,0 +1,95 @@
+/* ===================== PATIENTS PAGE ===================== */
+.patients-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.patients-filters {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.filter-tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 4px;
+}
+
+.filter-tab {
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.filter-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+}
+
+.filter-tab.active {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+}
+
+.patients-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-4) var(--space-6);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.pstat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pstat-val {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.pstat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Patient form: new */
+.new-patient-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    max-width: 720px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5);
+}
+
+.form-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border);
+}
