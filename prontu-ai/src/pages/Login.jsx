@@ -113,10 +113,16 @@ export default function Login() {
                         <span>ou entre como</span>
                     </div>
 
-                    <button className="btn btn-outline w-full" onClick={() => navigate('/dashboard')}>
-                        <Activity size={16} />
-                        Demo — Sem login
-                    </button>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                        <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => navigate('/dashboard')}>
+                            <Activity size={16} />
+                            Demo Médico
+                        </button>
+                        <button className="btn btn-outline" style={{ flex: 1, borderColor: 'var(--purple)', color: 'var(--purple)' }} onClick={() => navigate('/admin')}>
+                            <Shield size={16} />
+                            Demo Admin
+                        </button>
+                    </div>
 
                     <p className="login-footer">
                         Plataforma exclusiva para médicos credenciados.<br />

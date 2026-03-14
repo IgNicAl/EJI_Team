@@ -239,3 +239,25 @@ export const weeklyData = [
   { day: 'Sáb', consultas: 2 },
   { day: 'Dom', consultas: 0 },
 ];
+
+export const adminStats = {
+  totalDoctors: 42,
+  totalPatients: 1240,
+  activeSubscriptions: 38,
+  aiCreditsUsed: '85%',
+  systemHealth: '99.9%',
+  monthlyRevenue: 'R$ 12.500,00'
+};
+
+export const doctorsList = [
+  { id: 'doc-1', name: 'Dr. Rafael Mendes', specialty: 'Clínica Geral', status: 'active', patients: 148, joined: '2025-10-12' },
+  { id: 'doc-2', name: 'Dra. Beatriz Costa', specialty: 'Pediatria', status: 'active', patients: 92, joined: '2025-11-05' },
+  { id: 'doc-3', name: 'Dr. Marcos Silva', specialty: 'Cardiologia', status: 'pending', patients: 0, joined: '2026-03-01' },
+  { id: 'doc-4', name: 'Dra. Juliana Lima', specialty: 'Dermatologia', status: 'inactive', patients: 45, joined: '2025-08-20' },
+];
+
+export const adminSystemLogs = [
+  { id: 1, action: 'Novo médico cadastrado', user: 'Dr. Marcos Silva', time: '10:45' },
+  { id: 2, action: 'Backup concluído', user: 'Sistema', time: '04:00' },
+  { id: 3, action: 'Configuração de IA alterada', user: 'Admin Principal', time: 'Ontem' },
+];

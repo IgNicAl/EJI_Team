@@ -27,31 +27,14 @@ export default function WhatsApp() {
     return (
         <div className="whatsapp-page animate-fade">
             {/* Header */}
-            <div className="page-header">
-                <h1>WhatsApp</h1>
-                <p>Canal de integração para prontuários via áudio</p>
-            </div>
-
-            {/* Connection status */}
-            <div className="wa-connection-bar">
-                <div className="wa-status-indicator">
-                    <div className="wa-dot-lg" />
-                    <div>
-                        <p style={{ fontWeight: 600, fontSize: 14 }}>Canal conectado</p>
-                        <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>+55 11 99999-0001 · Prontu.ai Bot ativo</p>
-                    </div>
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h1>WhatsApp</h1>
+                    <p>Canal de integração ativo · +55 11 99999-0001</p>
                 </div>
-                <div style={{ display: 'flex', gap: 24 }}>
-                    {[
-                        { label: 'Áudios processados', value: '34', color: 'var(--primary)' },
-                        { label: 'Prontuários gerados', value: '34', color: 'var(--purple)' },
-                        { label: 'Não lidas', value: '2', color: 'var(--warning)' },
-                    ].map(s => (
-                        <div key={s.label} style={{ textAlign: 'center' }}>
-                            <p style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</p>
-                            <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.label}</p>
-                        </div>
-                    ))}
+                <div style={{ display: 'flex', gap: 12 }}>
+                    <div className="badge badge-accent"><Mic size={12} /> Áudio Ativado</div>
+                    <div className="badge badge-whatsapp"><Zap size={12} /> IA Conectada</div>
                 </div>
             </div>
 
@@ -114,10 +97,18 @@ export default function WhatsApp() {
 
                     {/* Messages */}
                     <div className="wa-messages">
-                        {/* How it works banner */}
-                        <div className="wa-how-banner">
-                            <Mic size={18} style={{ color: 'var(--whatsapp)' }} />
-                            <p>O médico envia o <strong>áudio da consulta</strong> pelo WhatsApp. A IA transcreve e gera o prontuário automaticamente.</p>
+                        {/* Audio Focus Banner */}
+                        <div className="wa-audio-focus-card">
+                            <div className="audio-focus-icon">
+                                <Mic size={24} />
+                            </div>
+                            <div className="audio-focus-text">
+                                <h3>Gravar Áudio da Consulta</h3>
+                                <p>A IA irá transcrever e estruturar o prontuário automaticamente na ficha do paciente.</p>
+                            </div>
+                            <button className="btn btn-primary pulse-glow">
+                                <Mic size={18} /> Iniciar Gravação
+                            </button>
                         </div>
 
                         {messages.map((m, i) => (
@@ -134,7 +125,7 @@ export default function WhatsApp() {
                                     <div className="wa-system-msg">
                                         <Volume2 size={13} style={{ color: 'var(--primary)' }} />
                                         <span>{m.content}</span>
-                                        <span className="badge badge-primary" style={{ fontSize: 10 }}>Processando...</span>
+                                        <span className="badge badge-primary" style={{ fontSize: 10 }}>Processando Prontuário...</span>
                                     </div>
                                 )}
                                 {m.from === 'bot' && (
@@ -142,7 +133,7 @@ export default function WhatsApp() {
                                         <div className="wa-bubble-sender">
                                             <Zap size={11} style={{ color: 'var(--purple)' }} /> Prontu.ai IA
                                         </div>
-                                        <p style={{ whiteSpace: 'pre-line' }}>{m.content}</p>
+                                        <p style={{ whiteSpace: 'pre-line' }}>✨ <strong>Prontuário estruturado com sucesso!</strong>{"\n\n"}{m.content}</p>
                                         <div className="wa-bubble-meta">{m.time} <CheckCircle size={11} style={{ color: 'var(--primary)' }} /></div>
                                     </div>
                                 )}
@@ -172,9 +163,9 @@ export default function WhatsApp() {
                         Como funciona
                     </h3>
                     {[
-                        { icon: Mic, color: '#25D366', label: '1. Paciente ou médico envia áudio', desc: 'Via WhatsApp, após a consulta' },
-                        { icon: Zap, color: 'var(--purple)', label: '2. IA transcreve e estrutura', desc: 'GPT processa em segundos' },
-                        { icon: CheckCircle, color: 'var(--accent)', label: '3. Prontuário gerado', desc: 'Disponível na plataforma web' },
+                        { icon: Mic, color: '#25D366', label: '1. Grave a consulta', desc: 'Clique no botão acima ou envie pelo Zap' },
+                        { icon: Zap, color: 'var(--purple)', label: '2. IA estrutura os dados', desc: 'Transcrição e CID automáticos' },
+                        { icon: CheckCircle, color: 'var(--accent)', label: '3. Prontuário salvo', desc: 'Acesse pela web ou PDF' },
                     ].map(s => (
                         <div key={s.label} className="wa-step">
                             <div style={{ width: 32, height: 32, borderRadius: 8, background: s.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}>

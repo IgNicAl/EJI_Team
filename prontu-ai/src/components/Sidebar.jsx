@@ -7,7 +7,7 @@ import {
 import { currentDoctor } from '../data/mock';
 import './Sidebar.css';
 
-const navItems = [
+const doctorNavItems = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/patients', icon: Users, label: 'Pacientes' },
     { to: '/agenda', icon: Calendar, label: 'Agenda' },
@@ -15,8 +15,19 @@ const navItems = [
     { to: '/settings', icon: Settings, label: 'Configurações' },
 ];
 
+const adminNavItems = [
+    { to: '/admin', icon: LayoutDashboard, label: 'Painel Geral' },
+    { to: '/admin/users', icon: Users, label: 'Gestão Médicos' },
+    { to: '/admin/settings', icon: Settings, label: 'Sistema' },
+    { to: '/dashboard', icon: LogOut, label: 'Sair Admin', secondary: true },
+];
+
 export default function Sidebar() {
     const navigate = useNavigate();
+    const isAdmin = window.location.pathname.startsWith('/admin');
+
+    const navItems = isAdmin ? adminNavItems : doctorNavItems;
+    const user = isAdmin ? { name: 'Admin Principal', role: 'Super Admin', avatar: 'AD' } : currentDoctor;
 
     function handleLogout() {
         navigate('/');
@@ -26,24 +37,28 @@ export default function Sidebar() {
         <aside className="sidebar">
             {/* Logo */}
             <div className="sidebar-logo">
-                <div className="logo-icon">
+                <div className="logo-icon" style={{ backgroundColor: isAdmin ? 'var(--purple)' : 'var(--primary)' }}>
                     <Activity size={18} strokeWidth={2.5} />
                 </div>
                 <div className="logo-text">
                     <span className="logo-name">Prontu</span>
                     <span className="logo-ai">.ai</span>
                 </div>
-                <div className="logo-badge">
+                <div className="logo-badge" style={{ backgroundColor: isAdmin ? 'var(--purple-light)' : 'var(--primary-light)', color: isAdmin ? 'var(--purple)' : 'var(--primary)' }}>
                     <Zap size={10} />
-                    IA
+                    {isAdmin ? 'ADM' : 'IA'}
                 </div>
             </div>
 
             {/* Nav */}
             <nav className="sidebar-nav">
-                <p className="sidebar-section-label">Principal</p>
-                {navItems.map(({ to, icon: Icon, label, badge }) => (
-                    <NavLink key={to} to={to} className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
+                <p className="sidebar-section-label">{isAdmin ? 'Gerenciamento' : 'Principal'}</p>
+                {navItems.map(({ to, icon: Icon, label, badge, secondary }) => (
+                    <NavLink
+                        key={to}
+                        to={to}
+                        className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}${secondary ? ' secondary' : ''}`}
+                    >
                         <Icon size={18} strokeWidth={1.8} />
                         <span>{label}</span>
                         {badge && <span className="sidebar-badge">{badge}</span>}
@@ -55,15 +70,15 @@ export default function Sidebar() {
             {/* User */}
             <div className="sidebar-footer">
                 <div className="sidebar-user">
-                    <div className="avatar avatar-sm" style={{ background: 'var(--primary-bg)', color: 'var(--primary)' }}>
-                        {currentDoctor.avatar}
+                    <div className="avatar avatar-sm" style={{ background: isAdmin ? 'var(--purple-light)' : 'var(--primary-light)', color: isAdmin ? 'var(--purple)' : 'var(--primary)' }}>
+                        {user.avatar}
                     </div>
                     <div className="sidebar-user-info">
-                        <p className="sidebar-user-name">{currentDoctor.name}</p>
-                        <p className="sidebar-user-role">{currentDoctor.specialty}</p>
+                        <p className="sidebar-user-name">{user.name}</p>
+                        <p className="sidebar-user-role">{user.role || user.specialty}</p>
                     </div>
                 </div>
-                <button className="btn btn-ghost btn-icon sidebar-logout" onClick={handleLogout} title="Sair">
+                <button className="btn btn-ghost btn-icon sidebar-logout" onClick={handleLogout} title="Sair do Sistema">
                     <LogOut size={16} />
                 </button>
             </div>

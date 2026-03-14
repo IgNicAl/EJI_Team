@@ -9,6 +9,9 @@ import NewPatient from './pages/NewPatient';
 import Agenda from './pages/Agenda';
 import WhatsApp from './pages/WhatsApp';
 import Settings from './pages/Settings';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
+import AdminSettings from './pages/AdminSettings';
 
 export default function App() {
   return (
@@ -26,6 +29,11 @@ export default function App() {
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/whatsapp" element={<WhatsApp />} />
           <Route path="/settings" element={<Settings />} />
+
+          {/* Admin Area */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
         </Route>
 
         {/* Fallback */}

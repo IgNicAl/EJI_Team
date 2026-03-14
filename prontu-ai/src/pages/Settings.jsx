@@ -59,22 +59,21 @@ export default function Settings() {
                 </Section>
 
                 {/* WhatsApp */}
-                <Section icon={Smartphone} iconColor="#25D366" title="Integração WhatsApp">
+                <Section icon={Smartphone} iconColor="#25D366" title="WhatsApp Corporativo">
                     <div className="wa-settings-status">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             <div className="wa-dot-lg" />
                             <div>
-                                <p style={{ fontWeight: 600 }}>WhatsApp conectado</p>
-                                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{currentDoctor.phone}</p>
+                                <p style={{ fontWeight: 600 }}>WhatsApp Ativado</p>
+                                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{currentDoctor.phone} (Integrado ao Perfil)</p>
                             </div>
                         </div>
-                        <span className="badge badge-accent"><CheckCircle size={12} /> Ativo</span>
+                        <span className="badge badge-accent">Configurado</span>
                     </div>
                     <div className="settings-toggle-list">
                         {[
-                            { label: 'Notificações de novas mensagens', desc: 'Receber alerta quando paciente enviar mensagem', on: true },
-                            { label: 'Processamento automático de áudio', desc: 'IA processa áudios automaticamente ao receber', on: true },
-                            { label: 'Confirmação de consultas via WhatsApp', desc: 'Enviar confirmação automática para pacientes', on: false },
+                            { label: 'Processamento automático de áudio', desc: 'IA processa áudios das consultas automaticamente', on: true },
+                            { label: 'Transcrição em tempo real', desc: 'Exibir texto enquanto o áudio é processado', on: true },
                         ].map(t => (
                             <div key={t.label} className="settings-toggle-row">
                                 <div>
