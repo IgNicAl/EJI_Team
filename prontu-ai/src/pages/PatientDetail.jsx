@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Mic, Zap, Calendar, Phone, Mail,
     AlertTriangle, FileText, Plus, ChevronDown, ChevronUp,
-    MessageSquare, Edit2, Download
+    MessageSquare, Edit2, Download, Power, Loader2
 } from 'lucide-react';
 import { patients, prontuarios } from '../data/mock';
+import { updatePatientStatus } from '../services/n8nService';
 import './PatientDetail.css';
 
 function ConsultCard({ c, defaultOpen = false }) {
@@ -85,6 +86,24 @@ export default function PatientDetail() {
     const patient = patients.find(p => p.id === id);
     const record = prontuarios[id];
 
+    const [patientStatus, setPatientStatus] = useState(patient?.status || 'active');
+    const [statusLoading, setStatusLoading] = useState(false);
+
+    async function handleToggleStatus() {
+        const newStatus = patientStatus === 'active' ? 'inactive' : 'active';
+        setStatusLoading(true);
+        try {
+            await updatePatientStatus(patient.id, patient.name, newStatus);
+            setPatientStatus(newStatus);
+            console.log(`[PatientDetail] Status changed to ${newStatus} and synced with n8n`);
+        } catch (error) {
+            console.error('[PatientDetail] Failed to sync status with n8n:', error);
+            setPatientStatus(newStatus); // Update locally even if sync fails
+        } finally {
+            setStatusLoading(false);
+        }
+    }
+
     if (!patient) {
         return (
             <div className="empty-state" style={{ marginTop: 80 }}>
@@ -117,8 +136,8 @@ export default function PatientDetail() {
                         </p>
                         <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
                             {patient.whatsappSynced && <span className="badge badge-whatsapp"><MessageSquare size={11} /> WhatsApp</span>}
-                            <span className={`badge badge-${patient.status === 'active' ? 'accent' : 'muted'}`}>
-                                {patient.status === 'active' ? 'Ativo' : 'Inativo'}
+                            <span className={`badge badge-${patientStatus === 'active' ? 'accent' : 'muted'}`}>
+                                {patientStatus === 'active' ? 'Ativo' : 'Inativo'}
                             </span>
                             <span className="badge badge-muted">{patient.totalConsults} consultas</span>
                         </div>
@@ -128,6 +147,15 @@ export default function PatientDetail() {
                     <button className="btn btn-outline btn-sm"><Phone size={14} /> Ligar</button>
                     <button className="btn btn-outline btn-sm"><Mail size={14} /> E-mail</button>
                     <button className="btn btn-primary btn-sm"><Plus size={14} /> Nova consulta</button>
+                    <button
+                        className={`btn btn-sm ${patientStatus === 'active' ? 'btn-outline' : 'btn-primary'}`}
+                        onClick={handleToggleStatus}
+                        disabled={statusLoading}
+                        title={patientStatus === 'active' ? 'Desativar paciente' : 'Reativar paciente'}
+                    >
+                        {statusLoading ? <Loader2 size={14} className="spin-icon" /> : <Power size={14} />}
+                        {patientStatus === 'active' ? 'Desativar' : 'Reativar'}
+                    </button>
                     <button className="btn btn-ghost btn-icon"><Download size={16} /></button>
                 </div>
             </div>

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Plus, ChevronLeft, ChevronRight, Video, MapPin, Calendar } from 'lucide-react';
+import { Clock, Plus, ChevronLeft, ChevronRight, Video, MapPin, Calendar, Loader2 } from 'lucide-react';
 import { appointments } from '../data/mock';
+import { syncAppointment } from '../services/n8nService';
 import './Agenda.css';
 
 const HOURS = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
@@ -26,9 +27,33 @@ function typeColor(type) {
 export default function Agenda() {
     const navigate = useNavigate();
     const [selectedDate, setSelectedDate] = useState('2026-03-14');
+    const [syncingSlot, setSyncingSlot] = useState(null);
 
     const dayAppts = appointments.filter(a => a.date === selectedDate)
         .sort((a, b) => a.time.localeCompare(b.time));
+
+    async function handleScheduleSlot(hour) {
+        setSyncingSlot(hour);
+        const newAppointment = {
+            patientId: null,
+            patientName: 'Novo agendamento',
+            date: selectedDate,
+            time: hour,
+            duration: 30,
+            type: 'Consulta',
+            status: 'pending',
+            via: 'presencial',
+        };
+
+        try {
+            await syncAppointment(newAppointment, 'create');
+            console.log(`[Agenda] Slot ${hour} synced with n8n`);
+        } catch (error) {
+            console.error('[Agenda] Failed to sync slot with n8n:', error);
+        } finally {
+            setSyncingSlot(null);
+        }
+    }
 
     return (
         <div className="agenda-page animate-fade">
@@ -144,8 +169,16 @@ export default function Agenda() {
                                         ) : (
                                             <div className="empty-slot">
                                                 <span>Horário disponível</span>
-                                                <button className="btn btn-ghost btn-sm slot-add-btn">
-                                                    <Plus size={12} /> Agendar
+                                                <button
+                                                    className="btn btn-ghost btn-sm slot-add-btn"
+                                                    onClick={() => handleScheduleSlot(hour)}
+                                                    disabled={syncingSlot === hour}
+                                                >
+                                                    {syncingSlot === hour ? (
+                                                        <><Loader2 size={12} className="spin-icon" /> Sincronizando...</>
+                                                    ) : (
+                                                        <><Plus size={12} /> Agendar</>
+                                                    )}
                                                 </button>
                                             </div>
                                         )}
