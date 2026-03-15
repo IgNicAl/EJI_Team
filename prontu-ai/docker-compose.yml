@@ -10,6 +10,8 @@ services:
         VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
         VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
         VITE_N8N_BASE_URL: ${VITE_N8N_BASE_URL}
+    env_file:
+      - .env.local
     container_name: prontu-ai
     ports:
       - "3000:8080"
@@ -23,11 +25,11 @@ services:
     # Remove todas as capabilities de root
     cap_drop:
       - ALL
-    # Diretórios necessários para o funcionamento interno do nginx em RAM
+    # Diretório necessário para o funcionamento interno do nginx
     tmpfs:
-      - /var/cache/nginx
-      - /var/run
       - /tmp
+      - /var/cache/nginx
+      - /var/log/nginx
     
     # Validação contínua do estado do container
     healthcheck:

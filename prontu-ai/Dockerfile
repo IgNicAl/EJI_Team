@@ -31,22 +31,18 @@ RUN npm run build
 # ============================================
 FROM nginx:1-alpine3.21 AS runtime
 
-# Remove as configurações padrão e ficheiros estáticos padrão do Nginx
-RUN rm -rf /etc/nginx/conf.d/default.conf /usr/share/nginx/html/*
+# Remove a configuração padrão inteira e ficheiros estáticos
+RUN rm -rf /etc/nginx/conf.d /usr/share/nginx/html/*
 
-# Copia a sua configuração Nginx personalizada
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copia a configuração Nginx standalone completa (substitui a padrão)
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copia os artefactos gerados no Stage 1
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Ajusta as permissões para o utilizador nativo 'nginx'
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /etc/nginx/conf.d && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx:nginx /var/run/nginx.pid
+# Cria os diretórios temporários e ajusta permissões para 'nginx'
+RUN mkdir -p /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp && \
+    chown -R nginx:nginx /usr/share/nginx/html /tmp
 
 # Transição de Privilégio: Daqui para baixo, o processo deixa de ser root
 USER nginx
