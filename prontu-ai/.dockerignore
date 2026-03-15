@@ -1,0 +1,50 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+
+# Version control
+.git
+.gitignore
+
+# IDE / Editor
+.vscode
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Environment (secrets)
+.env
+.env.local
+*.local
+
+# Agent / AI config
+.agent
+.gemini
+
+# Database / Supabase
+supabase
+
+# Tests and docs
+test-login.mjs
+seed-doctor.mjs
+backend_specification.md
+README.md
+
+# Docker (avoid recursive context)
+Dockerfile
+docker-compose.yml
+.dockerignore

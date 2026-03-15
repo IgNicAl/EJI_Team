@@ -1,0 +1,122 @@
+services:
+  # -----------------------------------------------------
+  # 1. DATABASE (MySQL)
+  # -----------------------------------------------------
+  prontu-mysql:
+    image: mysql:8.0
+    container_name: prontu-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password_segura}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-prontu_db}
+      MYSQL_USER: ${MYSQL_USER:-prontu_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-prontu_pass}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - backend_net
+    # O Healthcheck garante que o banco de dados está pronto para receber conexões
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -----------------------------------------------------
+  # 2. AUTOMATION (n8n)
+  # -----------------------------------------------------
+  prontu-n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: prontu-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - backend_net
+
+  # -----------------------------------------------------
+  # 3. BACKEND (API)
+  # -----------------------------------------------------
+  prontu-backend:
+    # ATENÇÃO: Ajuste o 'context' se o backend estiver numa subpasta (ex: ./backend)
+    build:
+      context: ./backend 
+      dockerfile: Dockerfile
+    container_name: prontu-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000" # Ajuste para a porta real da sua API
+    environment:
+      # O backend usa o NOME DO CONTÊINER (prontu-mysql) como host do banco via DNS interno
+      - DB_HOST=prontu-mysql
+      - DB_USER=${MYSQL_USER:-prontu_user}
+      - DB_PASS=${MYSQL_PASSWORD:-prontu_pass}
+      - DB_NAME=${MYSQL_DATABASE:-prontu_db}
+    networks:
+      - frontend_net
+      - backend_net
+    # Impede que o backend inicie antes do MySQL estar 100% saudável
+    depends_on:
+      prontu-mysql:
+        condition: service_healthy
+
+  # -----------------------------------------------------
+  # 4. FRONTEND (React/Vite + Nginx Secure)
+  # -----------------------------------------------------
+  prontu-ai:
+    # ATENÇÃO: Se o frontend estiver na raiz, context é '.', se estiver numa pasta, use './frontend'
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_N8N_BASE_URL: ${VITE_N8N_BASE_URL}
+    container_name: prontu-ai
+    ports:
+      - "3000:8080"
+    restart: unless-stopped
+    
+    # Security Context
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    
+    networks:
+      - frontend_net # Frontend não enxerga a rede do banco de dados
+      
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+
+# -----------------------------------------------------
+# NETWORKS & VOLUMES (Infraestrutura Lógica)
+# -----------------------------------------------------
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    name: prontu_mysql_data
+  n8n_data:
+    name: prontu_n8n_data
