@@ -5,12 +5,96 @@ import {
     AlertTriangle, FileText, Plus, ChevronDown, ChevronUp,
     MessageSquare, Download, Power, Loader2
 } from 'lucide-react';
+import EditorJS from '@editorjs/editorjs';
+import Header from '@editorjs/header';
+import List from '@editorjs/list';
+import Paragraph from '@editorjs/paragraph';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { getPatientById, changePatientStatus } from '../services/patientService';
 import { updatePatientStatus as triggerStatusWebhook } from '../services/n8nService';
 import useSupabaseQuery from '../hooks/useSupabaseQuery';
 import { patients as mockPatients, prontuarios as mockProntuarios } from '../data/mock';
 import './PatientDetail.css';
+
+// Parser para converter Markdown básico para o formato dos blocos do Editor.js
+function markdownToEditorJs(md) {
+    if (!md) return { blocks: [] };
+    const blocks = [];
+    const lines = md.split('\n');
+    let currentList = null;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        if (line.match(/^#{1,6}\s/)) {
+            const level = line.match(/^(#{1,6})/)[0].length;
+            blocks.push({
+                type: 'header',
+                data: { text: line.replace(/^#{1,6}\s/, ''), level }
+            });
+            currentList = null;
+        } else if (line.match(/^[-*]\s/)) {
+            if (!currentList || currentList.data.style !== 'unordered') {
+                currentList = { type: 'list', data: { style: 'unordered', items: [] } };
+                blocks.push(currentList);
+            }
+            currentList.data.items.push(line.replace(/^[-*]\s/, '').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>'));
+        } else if (line.match(/^\d+\.\s/)) {
+            if (!currentList || currentList.data.style !== 'ordered') {
+                currentList = { type: 'list', data: { style: 'ordered', items: [] } };
+                blocks.push(currentList);
+            }
+            currentList.data.items.push(line.replace(/^\d+\.\s/, '').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>'));
+        } else {
+            currentList = null;
+            let parsedLine = line.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*(.*?)\*/g, '<i>$1</i>');
+            blocks.push({
+                type: 'paragraph',
+                data: { text: parsedLine }
+            });
+        }
+    }
+    return { blocks };
+}
+
+// Visualizador readonly robusto e limpo para o histórico
+function TranscriptEditor({ content }) {
+    const editorRef = React.useRef(null);
+    const editorInstance = React.useRef(null);
+
+    React.useEffect(() => {
+        if (!editorInstance.current && editorRef.current) {
+            editorInstance.current = new EditorJS({
+                holder: editorRef.current,
+                readOnly: true,
+                data: content ? markdownToEditorJs(content) : { blocks: [] },
+                tools: {
+                    header: { class: Header, inlineToolbar: true },
+                    list: { class: List, inlineToolbar: true },
+                    paragraph: { class: Paragraph, inlineToolbar: true }
+                },
+                minHeight: 0,
+            });
+        }
+
+        return () => {
+            if (editorInstance.current && editorInstance.current.destroy && editorInstance.current.isReady) {
+                const editor = editorInstance.current;
+                editor.isReady.then(() => {
+                    try {
+                        editor.destroy();
+                    } catch (e) {
+                         console.debug('EditorJS já destruído ou montado:', e);
+                    }
+                }).catch(() => {});
+                editorInstance.current = null;
+            }
+        };
+    }, [content]);
+
+    return <div ref={editorRef} className="transcript-box" />;
+}
 
 function ConsultCard({ c, defaultOpen = false }) {
     const [open, setOpen] = useState(defaultOpen);
@@ -53,7 +137,11 @@ function ConsultCard({ c, defaultOpen = false }) {
                     </div>
                     <div className="consult-section">
                         <h4><Mic size={13} /> Transcrição / Anotações</h4>
-                        <div className="transcript-box">{c.transcript || 'Sem transcrição'}</div>
+                        {c.transcript ? (
+                            <TranscriptEditor content={c.transcript} />
+                        ) : (
+                            <div className="transcript-box-empty">Sem transcrição</div>
+                        )}
                     </div>
                     {(c.medications || []).length > 0 && (
                         <div className="consult-section">

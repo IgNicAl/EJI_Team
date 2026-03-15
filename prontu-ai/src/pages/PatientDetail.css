@@ -160,16 +160,103 @@
     line-height: 1.65;
 }
 
+/* EditorJS Integrado - Estilo Profissional High-Fidelity & Clean Clinical */
 .transcript-box {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 14px 16px;
-    font-size: 13px;
-    color: var(--text-secondary);
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0; /* Borda sharp e raw, sem blur */
+    border-radius: 4px; /* Crisp edges para UI clínica */
+    padding: 24px 20px 24px 28px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #0F172A; /* Slate 900 High Contrast */
     line-height: 1.7;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02); /* Sutil */
+}
+
+/* Indicador lateral minimalista sem apelo genérico */
+.transcript-box::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: -1px;
+    bottom: -1px;
+    width: 3px;
+    background: #0D9488; /* Teal-600 (Saúde e Confiança), Evitando Roxo/Azul padrão */
+    border-radius: 4px 0 0 4px;
+}
+
+[data-theme='dark'] .transcript-box {
+    background: #111827;
+    border-color: #374151;
+    color: #F8FAFC;
+}
+
+[data-theme='dark'] .transcript-box::before {
+    background: #14B8A6; /* Teal-500 em modo escuro */
+}
+
+/* Override dos estilos padrão do EditorJS para se adequar ao design de leitura */
+.transcript-box .codex-editor__redactor {
+    padding-bottom: 0 !important;
+}
+
+.transcript-box .ce-block__content {
+    max-width: 100% !important;
+    margin: 0 !important;
+}
+
+.transcript-box .ce-header {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0F172A;
+    letter-spacing: -0.01em; /* Tipografia densa e refinada */
+    margin-bottom: 12px;
+    margin-top: 18px;
+    padding: 0;
+}
+
+[data-theme='dark'] .transcript-box .ce-header {
+    color: #F8FAFC;
+}
+
+.transcript-box .ce-paragraph {
+    color: #475569; /* Slate 600 */
+    line-height: 1.8;
+    margin-bottom: 12px;
+}
+
+[data-theme='dark'] .transcript-box .ce-paragraph {
+    color: #CBD5E1; 
+}
+
+.transcript-box .cdx-list {
+    margin: 12px 0 16px 24px;
+    color: #475569;
+}
+
+[data-theme='dark'] .transcript-box .cdx-list {
+    color: #CBD5E1;
+}
+
+.transcript-box .cdx-list__item {
+    padding: 3px 0 3px 6px;
+    line-height: 1.6;
+}
+
+.transcript-box b, .transcript-box strong {
+    font-weight: 600;
+    color: #0F172A;
+}
+
+[data-theme='dark'] .transcript-box b, [data-theme='dark'] .transcript-box strong {
+    color: #F8FAFC;
+}
+
+.transcript-box-empty {
+    font-size: 13px;
     font-style: italic;
-    border-left: 3px solid var(--primary);
+    color: var(--text-muted);
 }
 
 .med-list {

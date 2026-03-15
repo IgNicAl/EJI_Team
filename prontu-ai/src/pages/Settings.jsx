@@ -69,6 +69,7 @@ export default function Settings() {
                             </div>
                         </div>
                         <span className="badge badge-accent">Configurado</span>
+                        <span className="badge badge-accent">Editar Número</span>
                     </div>
                     <div className="settings-toggle-list">
                         {[

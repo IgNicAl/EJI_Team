@@ -11,6 +11,10 @@
     "seed": "node supabase/seed-doctor.mjs"
   },
   "dependencies": {
+    "@editorjs/editorjs": "^2.31.5",
+    "@editorjs/header": "^2.8.8",
+    "@editorjs/list": "^2.0.9",
+    "@editorjs/paragraph": "^2.11.7",
     "@supabase/supabase-js": "^2.99.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.577.0",
