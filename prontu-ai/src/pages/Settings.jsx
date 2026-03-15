@@ -29,7 +29,7 @@ export default function Settings() {
     const formatPhoneForDisplay = (rawString) => {
         let val = rawString.replace(/\D/g, '');
         // Adiciona 55 se o bd vier sem o código do país mas devíamos forçar ter
-        if (val.length === 11) val = '55' + val; 
+        // if (val.length === 11) val = '55' + val; 
         
         if (!val) return '';
         
