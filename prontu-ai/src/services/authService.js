@@ -110,3 +110,28 @@ export async function getCurrentDoctor() {
     return null;
   }
 }
+
+/**
+ * Update the doctor's phone number.
+ *
+ * @param {string} authId
+ * @param {string} phone
+ * @returns {Promise<void>}
+ */
+export async function updateDoctorPhone(authId, phone) {
+  if (!isSupabaseConfigured()) throw new Error('Supabase not configured');
+
+  const { error } = await withTimeout(
+    supabase
+      .from('doctors')
+      .update({ phone })
+      .eq('auth_id', authId)
+  );
+
+  if (error) {
+    if (error.code === '23505') {
+       throw new Error('Este número de WhatsApp já está em uso por outro médico.');
+    }
+    throw error;
+  }
+}

@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS doctors (
   specialty  TEXT NOT NULL DEFAULT '',
   crm        TEXT NOT NULL DEFAULT '',
   email      TEXT UNIQUE NOT NULL,
-  phone      TEXT DEFAULT '',
+  phone      TEXT UNIQUE DEFAULT NULL,
   avatar     TEXT DEFAULT '',
   whatsapp_connected BOOLEAN DEFAULT FALSE,
   role       TEXT NOT NULL DEFAULT 'doctor' CHECK (role IN ('doctor', 'admin')),

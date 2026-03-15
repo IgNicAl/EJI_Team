@@ -1,6 +1,7 @@
 import React from 'react';
-import { Activity, Bell, Shield, Smartphone, User, Key, Zap, Save, CheckCircle } from 'lucide-react';
+import { Activity, Bell, Shield, Smartphone, User, Key, Zap, Save, CheckCircle, Edit2, X, Loader2 } from 'lucide-react';
 import { currentDoctor } from '../data/mock';
+import { getCurrentDoctor, updateDoctorPhone, getSession } from '../services/authService';
 import './Settings.css';
 
 function Section({ icon: Icon, iconColor, title, children }) {
@@ -18,6 +19,94 @@ function Section({ icon: Icon, iconColor, title, children }) {
 }
 
 export default function Settings() {
+    const [realDoctor, setRealDoctor] = React.useState(null);
+    const [isEditingPhone, setIsEditingPhone] = React.useState(false);
+    const [phoneValue, setPhoneValue] = React.useState('');
+    const [phoneLoading, setPhoneLoading] = React.useState(false);
+    const [phoneError, setPhoneError] = React.useState('');
+    const [phoneSuccess, setPhoneSuccess] = React.useState(false);
+
+    const formatPhoneForDisplay = (rawString) => {
+        let val = rawString.replace(/\D/g, '');
+        // Adiciona 55 se o bd vier sem o código do país mas devíamos forçar ter
+        if (val.length === 11) val = '55' + val; 
+        
+        if (!val) return '';
+        
+        let mask = '+';
+        if (val.length > 0) mask += val.slice(0, 2);
+        if (val.length > 2) mask += ` (${val.slice(2, 4)}) `;
+        if (val.length > 4) {
+            if (val.length > 9) {
+                mask += `${val.slice(4, 9)}-${val.slice(9, 13)}`;
+            } else {
+                mask += val.slice(4);
+            }
+        }
+        return mask;
+    };
+
+    React.useEffect(() => {
+        async function fetchDoctor() {
+            const doc = await getCurrentDoctor();
+            if (doc) {
+                setRealDoctor(doc);
+                setPhoneValue(doc.phone ? formatPhoneForDisplay(doc.phone) : '');
+                if (doc.phone) setPhoneSuccess(true);
+            }
+        }
+        fetchDoctor();
+    }, []);
+
+    const handlePhoneChange = (e) => {
+        let rawValue = e.target.value.replace(/\D/g, '');
+        // Se a pessoa apagar tudo, limpa
+        if (rawValue === '') {
+             setPhoneValue('');
+             setPhoneError('');
+             return;
+        }
+
+        // Forçar o prefixo 55
+        if (!rawValue.startsWith('55') && rawValue.length > 0) {
+             rawValue = '55' + rawValue;
+        }
+        
+        // Limite Brasil: 55 + 11 digitos = 13 digitos max
+        if (rawValue.length > 13) rawValue = rawValue.slice(0, 13);
+        
+        setPhoneValue(formatPhoneForDisplay(rawValue));
+        setPhoneError('');
+    };
+
+    const handleSavePhone = async () => {
+        if (!realDoctor) return;
+        setPhoneLoading(true);
+        setPhoneError('');
+        setPhoneSuccess(false);
+        try {
+            const sessionData = await getSession();
+            if (!sessionData?.session?.user?.id) throw new Error("Usuário não autenticado");
+            
+            // Send to DB only numbers (5581999999999)
+            const rawPhoneToSave = phoneValue.replace(/\D/g, '');
+            
+            await updateDoctorPhone(sessionData.session.user.id, rawPhoneToSave);
+            setPhoneSuccess(true);
+            setIsEditingPhone(false);
+            
+            // update local state representations
+            setRealDoctor(prev => ({ ...prev, phone: rawPhoneToSave }));
+
+            // placeholder for sms verification if needed in the future
+            // await sendPhoneVerificationCode(phoneValue)
+        } catch (err) {
+            setPhoneError(err.message || "Erro ao atualizar telefone");
+        } finally {
+            setPhoneLoading(false);
+        }
+    };
+
     return (
         <div className="settings-page animate-fade">
             <div className="page-header">
@@ -65,12 +154,54 @@ export default function Settings() {
                             <div className="wa-dot-lg" />
                             <div>
                                 <p style={{ fontWeight: 600 }}>WhatsApp Ativado</p>
-                                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{currentDoctor.phone} (Integrado ao Perfil)</p>
+                                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                                    {realDoctor?.phone || currentDoctor.phone} (Integrado ao Perfil)
+                                </p>
                             </div>
                         </div>
-                        <span className="badge badge-accent">Configurado</span>
-                        <span className="badge badge-accent">Editar Número</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {isEditingPhone ? (
+                                <>
+                                    <input
+                                        type="text"
+                                        className="input-field"
+                                        style={{ width: '150px', padding: '4px 8px', minHeight: '32px' }}
+                                        value={phoneValue}
+                                        onChange={handlePhoneChange}
+                                        disabled={phoneLoading}
+                                        placeholder="(11) 99999-9999"
+                                    />
+                                    <button 
+                                        className="btn btn-primary btn-sm" 
+                                        onClick={handleSavePhone}
+                                        disabled={phoneLoading || phoneValue.length < 14}
+                                    >
+                                        {phoneLoading ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                                    </button>
+                                    <button 
+                                        className="btn btn-outline btn-sm" 
+                                        onClick={() => { setIsEditingPhone(false); setPhoneError(''); }}
+                                        disabled={phoneLoading}
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="badge" style={{ backgroundColor: phoneSuccess ? '#25D366' : 'var(--accent)', color: 'white', borderColor: 'transparent' }}>
+                                        {phoneSuccess ? 'Configurado' : 'Aviso'}
+                                    </span>
+                                    <button 
+                                        className="btn btn-outline btn-sm" 
+                                        onClick={() => setIsEditingPhone(true)}
+                                    >
+                                        <Edit2 size={12} style={{ marginRight: 4 }} /> Editar Número
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
+                    {phoneError && <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: -8, marginBottom: 12 }}>{phoneError}</p>}
                     <div className="settings-toggle-list">
                         {[
                             { label: 'Processamento automático de áudio', desc: 'IA processa áudios das consultas automaticamente', on: true },
