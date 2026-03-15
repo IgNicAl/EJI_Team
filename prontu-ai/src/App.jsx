@@ -10,6 +10,7 @@ import PatientDetail from './pages/PatientDetail';
 import NewPatient from './pages/NewPatient';
 import Agenda from './pages/Agenda';
 import WhatsApp from './pages/WhatsApp';
+import WhatsAppConnect from './pages/WhatsAppConnect';
 import Settings from './pages/Settings';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUsers from './pages/AdminUsers';
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/patients/:id" element={<PatientDetail />} />
             <Route path="/agenda" element={<Agenda />} />
             <Route path="/whatsapp" element={<WhatsApp />} />
+            <Route path="/whatsapp-connect" element={<WhatsAppConnect />} />
             <Route path="/settings" element={<Settings />} />
 
             {/* Admin Area */}

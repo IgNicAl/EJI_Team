@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { Clock, Plus, ChevronLeft, ChevronRight, Video, MapPin, Calendar, Loader2 } from 'lucide-react';
+import { Clock, Plus, ChevronLeft, ChevronRight, Video, MapPin, Calendar, Loader2, Edit2, X, Check, Trash2, User, Activity, GripVertical } from 'lucide-react';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { getAppointments, createAppointment } from '../services/appointmentService';
+import { getAppointments, createAppointment, updateAppointment, deleteAppointment } from '../services/appointmentService';
 import { syncAppointment } from '../services/n8nService';
 import { useAuth } from '../context/AuthContext';
 import useSupabaseQuery from '../hooks/useSupabaseQuery';
@@ -43,6 +43,10 @@ export default function Agenda() {
     const today = new Date().toISOString().split('T')[0];
     const [selectedDate, setSelectedDate] = useState(today);
     const [syncingSlot, setSyncingSlot] = useState(null);
+    const [editingAppt, setEditingAppt] = useState(null);
+    const [dragOverHour, setDragOverHour] = useState(null);
+    const [draggedApptId, setDraggedApptId] = useState(null);
+    const [appointments, setAppointments] = useState([]);
     const weekDates = getWeekDates(selectedDate);
 
     // Fetch from Supabase or fall back to mock
@@ -53,7 +57,16 @@ export default function Agenda() {
         [supabaseOn, weekDates[0]?.date],
     );
 
-    const allAppointments = dbAppointments || mockAppointments;
+    // Initialize/Update local state when data changes
+    React.useEffect(() => {
+        if (dbAppointments) {
+            setAppointments(dbAppointments);
+        } else if (!supabaseOn) {
+            setAppointments(mockAppointments);
+        }
+    }, [dbAppointments, supabaseOn]);
+
+    const allAppointments = appointments;
     const dayAppts = allAppointments
         .filter(a => a.date === selectedDate)
         .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
@@ -83,18 +96,86 @@ export default function Agenda() {
 
         try {
             if (supabaseOn && doctor?.id) {
-                await createAppointment(newAppointment, doctor.id);
+                const created = await createAppointment(newAppointment, doctor.id);
+                setAppointments(prev => [...prev, created]);
             } else {
                 await syncAppointment(newAppointment, 'create');
+                // Mock mode local update
+                const mockAppt = { 
+                    ...newAppointment, 
+                    id: `mock-${Date.now()}`,
+                    avatar: 'NA',
+                    avatarColor: '#64748B'
+                };
+                setAppointments(prev => [...prev, mockAppt]);
             }
             console.log(`[Agenda] Slot ${hour} synced`);
-            refetch();
         } catch (error) {
             console.error('[Agenda] Failed to sync slot:', error);
         } finally {
             setSyncingSlot(null);
         }
     }
+
+    async function handleUpdateAppointment(id, updates) {
+        // Optimistic update
+        setAppointments(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
+        
+        try {
+            if (supabaseOn) {
+                await updateAppointment(id, updates);
+                // No need to refetch if local state is already correct, 
+                // but good for ensuring sync
+            }
+            setEditingAppt(null);
+        } catch (error) {
+            console.error('[Agenda] Failed to update appointment:', error);
+            // Rollback if needed, but for now just log
+        }
+    }
+
+    async function handleDeleteAppointment(id) {
+        if (!window.confirm('Tem certeza que deseja excluir esta consulta?')) return;
+        
+        // Optimistic delete
+        setAppointments(prev => prev.filter(a => a.id !== id));
+        
+        try {
+            if (supabaseOn) {
+                await deleteAppointment(id);
+            }
+            setEditingAppt(null);
+        } catch (error) {
+            console.error('[Agenda] Failed to delete appointment:', error);
+        }
+    }
+
+    const onDragStart = (e, appt) => {
+        setDraggedApptId(appt.id);
+        e.dataTransfer.setData('appointmentId', appt.id);
+        e.dataTransfer.effectAllowed = 'move';
+        e.currentTarget.classList.add('dragging');
+    };
+
+    const onDragEnd = (e) => {
+        setDraggedApptId(null);
+        e.currentTarget.classList.remove('dragging');
+    };
+
+    const onDragOver = (e, hour) => {
+        e.preventDefault();
+        setDragOverHour(hour);
+    };
+
+    const onDrop = async (e, hour) => {
+        e.preventDefault();
+        setDragOverHour(null);
+        setDraggedApptId(null);
+        const id = e.dataTransfer.getData('appointmentId');
+        if (id) {
+            await handleUpdateAppointment(id, { time: hour });
+        }
+    };
 
     return (
         <div className="agenda-page animate-fade">
@@ -200,15 +281,27 @@ export default function Agenda() {
                             {HOURS.map(hour => {
                                 const appt = dayAppts.find(a => a.time === hour);
                                 return (
-                                    <div key={hour} className="timeline-row">
+                                    <div 
+                                        key={hour} 
+                                        className={`timeline-row ${dragOverHour === hour ? 'drag-over' : ''}`}
+                                        onDragOver={(e) => onDragOver(e, hour)}
+                                        onDragLeave={() => setDragOverHour(null)}
+                                        onDrop={(e) => onDrop(e, hour)}
+                                    >
                                         <div className="timeline-hour">{hour}</div>
                                         <div className="timeline-slot">
                                             {appt ? (
                                                 <div
-                                                    className={`appt-block appt-${typeColor(appt.type)}`}
+                                                    className={`appt-block appt-${typeColor(appt.type)} ${draggedApptId === appt.id ? 'dragging-source' : ''}`}
                                                     style={{ animationDelay: '0.1s' }}
+                                                    draggable
+                                                    onDragStart={(e) => onDragStart(e, appt)}
+                                                    onDragEnd={onDragEnd}
                                                 >
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
+                                                        <div className="drag-handle">
+                                                            <GripVertical size={16} />
+                                                        </div>
                                                         <div className="avatar avatar-sm" style={{ background: appt.avatarColor + '22', color: appt.avatarColor }}>
                                                             {appt.avatar}
                                                         </div>
@@ -220,6 +313,14 @@ export default function Agenda() {
                                                         </div>
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                                                        <div className="appt-actions">
+                                                            <button 
+                                                                className="btn btn-ghost btn-icon btn-xs"
+                                                                onClick={() => setEditingAppt(appt)}
+                                                            >
+                                                                <Edit2 size={12} />
+                                                            </button>
+                                                        </div>
                                                         {appt.via === 'telehealth' ? (
                                                             <span className="badge badge-purple"><Video size={10} /> Teleconsulta</span>
                                                         ) : (
@@ -254,6 +355,88 @@ export default function Agenda() {
                     )}
                 </div>
             </div>
+
+            {editingAppt && (
+                <div className="modal-overlay" onClick={() => setEditingAppt(null)}>
+                    <div className="modal-card animate-scale" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2><Edit2 size={20} style={{ color: 'var(--primary)' }} /> Editar Consulta</h2>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setEditingAppt(null)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="form-group">
+                                <label><User size={14} /> Paciente</label>
+                                <div className="input-wrapper">
+                                    <input 
+                                        type="text" 
+                                        className="input-modern w-full" 
+                                        defaultValue={editingAppt.patientName}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            setEditingAppt(prev => ({ ...prev, patientName: val }));
+                                        }}
+                                        placeholder="Nome do Paciente"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label><Clock size={14} /> Horário</label>
+                                    <select 
+                                        className="select-modern" 
+                                        defaultValue={editingAppt.time}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            setEditingAppt(prev => ({ ...prev, time: val }));
+                                        }}
+                                    >
+                                        {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label><Activity size={14} /> Status</label>
+                                    <select 
+                                        className="select-modern" 
+                                        defaultValue={editingAppt.status}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            setEditingAppt(prev => ({ ...prev, status: val }));
+                                        }}
+                                    >
+                                        {Object.entries(STATUS_LABEL).map(([val, label]) => (
+                                            <option key={val} value={val}>{label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <div style={{ marginRight: 'auto' }}>
+                                <button 
+                                    className="btn btn-danger btn-sm"
+                                    onClick={() => handleDeleteAppointment(editingAppt.id)}
+                                >
+                                    <Trash2 size={14} /> Excluir
+                                </button>
+                            </div>
+                            <button className="btn btn-ghost" onClick={() => setEditingAppt(null)}>Cancelar</button>
+                            <button 
+                                className="btn btn-primary"
+                                onClick={() => handleUpdateAppointment(editingAppt.id, {
+                                    patient_name: editingAppt.patientName,
+                                    time: editingAppt.time,
+                                    status: editingAppt.status
+                                })}
+                            >
+                                <Check size={16} /> Salvar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

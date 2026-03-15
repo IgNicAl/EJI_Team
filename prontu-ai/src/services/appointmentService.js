@@ -102,6 +102,30 @@ export async function updateAppointment(id, updates) {
 }
 
 /**
+ * Delete an appointment.
+ *
+ * @param {string} id
+ * @returns {Promise<void>}
+ */
+export async function deleteAppointment(id) {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase not configured');
+  }
+
+  const { error } = await supabase
+    .from('appointments')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+
+  // Fire-and-forget: notify n8n
+  triggerAppointmentWebhook({ id }, 'delete').catch(err => {
+    console.warn('[AppointmentService] n8n webhook failed (non-blocking):', err.message);
+  });
+}
+
+/**
  * Get count of appointments for today.
  *
  * @returns {Promise<number>}

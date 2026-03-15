@@ -11,7 +11,8 @@ const doctorNavItems = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/patients', icon: Users, label: 'Pacientes' },
     { to: '/agenda', icon: Calendar, label: 'Agenda' },
-    { to: '/whatsapp', icon: MessageSquare, label: 'WhatsApp', badge: 2 },
+    { to: '/whatsapp-connect', icon: Zap, label: 'Assistente Zap' },
+    { to: '/whatsapp', icon: MessageSquare, label: 'WhatsApp Chat', badge: 2 },
     { to: '/settings', icon: Settings, label: 'Configurações' },
 ];
 

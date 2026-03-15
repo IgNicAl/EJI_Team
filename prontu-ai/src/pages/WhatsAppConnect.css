@@ -1,0 +1,206 @@
+.wa-setup-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.wa-setup-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+/* Bloco 1 — Status Alert */
+.wa-status-alert {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    backdrop-filter: blur(10px);
+}
+
+.wa-alert-content {
+    display: flex;
+    gap: var(--space-4);
+}
+
+.wa-alert-icon {
+    color: #F59E0B;
+    background: rgba(245, 158, 11, 0.15);
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.wa-alert-text h3 {
+    color: #FBBF24;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.wa-alert-text p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Bloco 2 — Access Card */
+.wa-access-card {
+    padding: var(--space-8);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-6);
+    background: linear-gradient(135deg, var(--card-bg) 0%, rgba(37, 211, 102, 0.05) 100%);
+    border: 1px solid var(--border);
+}
+
+.wa-access-header h2 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(to right, var(--text-primary), var(--primary));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.wa-access-header p {
+    color: var(--text-secondary);
+    font-size: 16px;
+}
+
+.wa-access-action {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    width: 100%;
+    max-width: 400px;
+}
+
+.btn-whatsapp-lg {
+    background: #25D366;
+    color: white;
+    padding: 16px 32px;
+    border-radius: var(--radius-xl);
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-decoration: none;
+    transition: var(--transition);
+    box-shadow: 0 10px 20px rgba(37, 211, 102, 0.2);
+}
+
+.btn-whatsapp-lg:hover {
+    background: #22c35e;
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(37, 211, 102, 0.3);
+}
+
+.wa-access-disclaimer {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.wa-access-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+    width: 100%;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* Bloco 3 — How it works */
+.wa-how-it-works {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.wa-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-5);
+}
+
+.wa-step-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.wa-step-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-4px);
+    background: var(--primary-glow);
+}
+
+.step-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.icon-mic { background: rgba(37, 211, 102, 0.1); color: #25D366; }
+.icon-search { background: rgba(14, 165, 233, 0.1); color: #0EA5E9; }
+.icon-check { background: rgba(139, 92, 246, 0.1); color: #8B5CF6; }
+
+.wa-step-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.wa-step-card p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .wa-alert-content {
+        flex-direction: column;
+    }
+    
+    .wa-access-header h2 {
+        font-size: 20px;
+    }
+    
+    .wa-steps-grid {
+        grid-template-columns: 1fr;
+    }
+}

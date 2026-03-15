@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Search, Plus, ChevronDown, Sun, Moon } from 'lucide-react';
+import { Bell, Search, Plus, UserPlus, ChevronDown, Sun, Moon } from 'lucide-react';
 import { currentDoctor } from '../data/mock';
 import { useTheme } from '../context/ThemeContext';
 import './Topbar.css';
@@ -9,7 +9,8 @@ const pageTitles = {
     '/dashboard': { title: 'Dashboard', subtitle: 'Visão geral do dia' },
     '/patients': { title: 'Pacientes', subtitle: 'Gerencie seus pacientes' },
     '/agenda': { title: 'Agenda', subtitle: 'Consultas e compromissos' },
-    '/whatsapp': { title: 'WhatsApp', subtitle: 'Canal de integração' },
+    '/whatsapp': { title: 'WhatsApp Chat', subtitle: 'Canal de integração' },
+    '/whatsapp-connect': { title: 'Configurar WhatsApp', subtitle: 'Assistente de IA' },
     '/settings': { title: 'Configurações', subtitle: 'Perfil e preferências' },
 };
 
@@ -54,10 +55,10 @@ export default function Topbar() {
                     {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
                 </button>
 
-                {/* New Consultation */}
+                {/* New Patient */}
                 <button className="btn btn-primary btn-sm" onClick={() => navigate('/patients/new')}>
-                    <Plus size={15} />
-                    Nova Consulta
+                    <UserPlus size={15} />
+                    Novo Paciente
                 </button>
 
                 {/* Notifications */}
