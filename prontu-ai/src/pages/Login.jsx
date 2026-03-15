@@ -1,17 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, Eye, EyeOff, MessageSquare, Zap, Shield, ArrowRight } from 'lucide-react';
+import { Activity, Eye, EyeOff, MessageSquare, Zap, Shield, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 export default function Login() {
     const [showPass, setShowPass] = useState(false);
-    const [email, setEmail] = useState('rafael@prontu.ai');
-    const [pass, setPass] = useState('••••••••');
+    const [email, setEmail] = useState('');
+    const [pass, setPass] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { signIn, demoLogin, isAuthenticated } = useAuth();
 
-    function handleSubmit(e) {
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [isAuthenticated, navigate]);
+
+    async function handleSubmit(e) {
         e.preventDefault();
-        navigate('/dashboard');
+        setLoading(true);
+        setError('');
+
+        try {
+            await signIn(email, pass);
+            navigate('/dashboard');
+        } catch (err) {
+            console.error('[Login] Error:', err);
+            setError(err?.message || 'Credenciais inválidas. Tente novamente.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function handleDemo(role) {
+        demoLogin(role);
+        navigate(role === 'admin' ? '/admin' : '/dashboard');
     }
 
     return (
@@ -65,6 +91,19 @@ export default function Login() {
                         <p>Bem-vindo de volta, doutor(a)!</p>
                     </div>
 
+                    {/* Error alert */}
+                    {error && (
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '10px 14px', borderRadius: 10,
+                            background: '#fef2f2', border: '1px solid #fca5a5',
+                            marginBottom: 16, fontSize: 13, color: '#991b1b',
+                        }}>
+                            <AlertTriangle size={16} style={{ color: '#ef4444', flexShrink: 0 }} />
+                            {error}
+                        </div>
+                    )}
+
                     <form className="login-form" onSubmit={handleSubmit}>
                         <div className="input-group">
                             <label className="input-label">E-mail ou CRM</label>
@@ -75,6 +114,7 @@ export default function Login() {
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
                                 placeholder="seu@email.com"
+                                disabled={loading}
                             />
                         </div>
 
@@ -88,6 +128,7 @@ export default function Login() {
                                     value={pass}
                                     onChange={e => setPass(e.target.value)}
                                     placeholder="••••••••"
+                                    disabled={loading}
                                 />
                                 <button
                                     type="button"
@@ -103,9 +144,18 @@ export default function Login() {
                             <a href="#" className="forgot-link">Esqueci minha senha</a>
                         </div>
 
-                        <button id="login-btn" type="submit" className="btn btn-primary w-full btn-lg login-btn">
-                            Entrar
-                            <ArrowRight size={18} />
+                        <button id="login-btn" type="submit" className="btn btn-primary w-full btn-lg login-btn" disabled={loading}>
+                            {loading ? (
+                                <>
+                                    <Loader2 size={18} className="spin-icon" />
+                                    Entrando...
+                                </>
+                            ) : (
+                                <>
+                                    Entrar
+                                    <ArrowRight size={18} />
+                                </>
+                            )}
                         </button>
                     </form>
 
@@ -114,11 +164,11 @@ export default function Login() {
                     </div>
 
                     <div style={{ display: 'flex', gap: 12 }}>
-                        <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => navigate('/dashboard')}>
+                        <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => handleDemo('doctor')}>
                             <Activity size={16} />
                             Demo Médico
                         </button>
-                        <button className="btn btn-outline" style={{ flex: 1, borderColor: 'var(--purple)', color: 'var(--purple)' }} onClick={() => navigate('/admin')}>
+                        <button className="btn btn-outline" style={{ flex: 1, borderColor: 'var(--purple)', color: 'var(--purple)' }} onClick={() => handleDemo('admin')}>
                             <Shield size={16} />
                             Demo Admin
                         </button>

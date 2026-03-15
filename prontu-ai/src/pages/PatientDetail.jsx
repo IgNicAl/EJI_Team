@@ -3,10 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Mic, Zap, Calendar, Phone, Mail,
     AlertTriangle, FileText, Plus, ChevronDown, ChevronUp,
-    MessageSquare, Edit2, Download, Power, Loader2
+    MessageSquare, Download, Power, Loader2
 } from 'lucide-react';
-import { patients, prontuarios } from '../data/mock';
-import { updatePatientStatus } from '../services/n8nService';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { getPatientById, changePatientStatus } from '../services/patientService';
+import { updatePatientStatus as triggerStatusWebhook } from '../services/n8nService';
+import useSupabaseQuery from '../hooks/useSupabaseQuery';
+import { patients as mockPatients, prontuarios as mockProntuarios } from '../data/mock';
 import './PatientDetail.css';
 
 function ConsultCard({ c, defaultOpen = false }) {
@@ -33,7 +36,7 @@ function ConsultCard({ c, defaultOpen = false }) {
                             <span className="badge badge-muted" style={{ fontSize: 10, color: viaColor }}>{viaLabel}</span>
                         </div>
                         <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                            CID: {c.cid.join(' · ')}
+                            CID: {(c.cid || []).join(' · ') || '—'}
                         </p>
                     </div>
                 </div>
@@ -46,13 +49,13 @@ function ConsultCard({ c, defaultOpen = false }) {
                 <div className="consult-body animate-fade">
                     <div className="consult-section">
                         <h4><FileText size={13} /> Diagnóstico</h4>
-                        <p>{c.diagnosis}</p>
+                        <p>{c.diagnosis || 'Não informado'}</p>
                     </div>
                     <div className="consult-section">
                         <h4><Mic size={13} /> Transcrição / Anotações</h4>
-                        <div className="transcript-box">{c.transcript}</div>
+                        <div className="transcript-box">{c.transcript || 'Sem transcrição'}</div>
                     </div>
-                    {c.medications.length > 0 && (
+                    {(c.medications || []).length > 0 && (
                         <div className="consult-section">
                             <h4>💊 Medicamentos</h4>
                             <ul className="med-list">
@@ -60,7 +63,7 @@ function ConsultCard({ c, defaultOpen = false }) {
                             </ul>
                         </div>
                     )}
-                    {c.exams.length > 0 && (
+                    {(c.exams || []).length > 0 && (
                         <div className="consult-section">
                             <h4>🔬 Exames solicitados</h4>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -83,25 +86,51 @@ function ConsultCard({ c, defaultOpen = false }) {
 export default function PatientDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const patient = patients.find(p => p.id === id);
-    const record = prontuarios[id];
+    const supabaseOn = isSupabaseConfigured();
 
-    const [patientStatus, setPatientStatus] = useState(patient?.status || 'active');
+    const { data: dbData, loading, error } = useSupabaseQuery(
+        () => supabaseOn ? getPatientById(id) : Promise.resolve(null),
+        [supabaseOn, id],
+    );
+
+    // Resolve: DB data or mock fallback
+    const mockPatient = mockPatients.find(p => p.id === id);
+    const mockRecord = mockProntuarios[id];
+
+    const patient = dbData?.patient || mockPatient;
+    const consultations = dbData?.consultations || mockRecord?.consultations || [];
+    const aiSummary = dbData?.consultations?.[0]?.aiSummary || mockRecord?.aiSummary || '';
+
+    const [localStatus, setLocalStatus] = useState(null);
     const [statusLoading, setStatusLoading] = useState(false);
+
+    const patientStatus = localStatus || patient?.status || 'active';
 
     async function handleToggleStatus() {
         const newStatus = patientStatus === 'active' ? 'inactive' : 'active';
         setStatusLoading(true);
         try {
-            await updatePatientStatus(patient.id, patient.name, newStatus);
-            setPatientStatus(newStatus);
-            console.log(`[PatientDetail] Status changed to ${newStatus} and synced with n8n`);
-        } catch (error) {
-            console.error('[PatientDetail] Failed to sync status with n8n:', error);
-            setPatientStatus(newStatus); // Update locally even if sync fails
+            if (supabaseOn) {
+                await changePatientStatus(patient.id, patient.name, newStatus);
+            } else {
+                await triggerStatusWebhook(patient.id, patient.name, newStatus);
+            }
+            setLocalStatus(newStatus);
+            console.log(`[PatientDetail] Status changed to ${newStatus}`);
+        } catch (err) {
+            console.error('[PatientDetail] Failed to update status:', err);
+            setLocalStatus(newStatus); // Update locally even on failure
         } finally {
             setStatusLoading(false);
         }
+    }
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80 }}>
+                <Loader2 size={32} className="spin-icon" style={{ color: 'var(--primary)' }} />
+            </div>
+        );
     }
 
     if (!patient) {
@@ -109,6 +138,7 @@ export default function PatientDetail() {
             <div className="empty-state" style={{ marginTop: 80 }}>
                 <FileText size={48} />
                 <h3>Paciente não encontrado</h3>
+                {error && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{error}</p>}
                 <button className="btn btn-primary" onClick={() => navigate('/patients')}>Voltar</button>
             </div>
         );
@@ -139,7 +169,7 @@ export default function PatientDetail() {
                             <span className={`badge badge-${patientStatus === 'active' ? 'accent' : 'muted'}`}>
                                 {patientStatus === 'active' ? 'Ativo' : 'Inativo'}
                             </span>
-                            <span className="badge badge-muted">{patient.totalConsults} consultas</span>
+                            <span className="badge badge-muted">{patient.totalConsults || consultations.length} consultas</span>
                         </div>
                     </div>
                 </div>
@@ -168,11 +198,11 @@ export default function PatientDetail() {
                         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Informações</h3>
                         <div className="info-rows">
                             {[
-                                { label: 'CPF', value: patient.cpf },
-                                { label: 'Telefone', value: patient.phone },
-                                { label: 'E-mail', value: patient.email },
-                                { label: 'Data de nasc.', value: new Date(patient.dob).toLocaleDateString('pt-BR') },
-                                { label: 'Última visita', value: new Date(patient.lastVisit).toLocaleDateString('pt-BR') },
+                                { label: 'CPF', value: patient.cpf || '—' },
+                                { label: 'Telefone', value: patient.phone || '—' },
+                                { label: 'E-mail', value: patient.email || '—' },
+                                { label: 'Data de nasc.', value: patient.dob ? new Date(patient.dob).toLocaleDateString('pt-BR') : '—' },
+                                { label: 'Última visita', value: patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString('pt-BR') : '—' },
                             ].map(({ label, value }) => (
                                 <div key={label} className="info-row">
                                     <span className="info-label">{label}</span>
@@ -187,7 +217,7 @@ export default function PatientDetail() {
                         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>
                             <AlertTriangle size={14} style={{ color: 'var(--danger)' }} /> Alergias
                         </h3>
-                        {patient.allergies.length ? (
+                        {(patient.allergies || []).length ? (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                                 {patient.allergies.map(a => <span key={a} className="badge badge-danger">{a}</span>)}
                             </div>
@@ -197,7 +227,7 @@ export default function PatientDetail() {
                     {/* Chronic */}
                     <div className="card">
                         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Comorbidades</h3>
-                        {patient.chronic.length ? (
+                        {(patient.chronic || []).length ? (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                                 {patient.chronic.map(c => <span key={c} className="badge badge-warning">{c}</span>)}
                             </div>
@@ -205,7 +235,7 @@ export default function PatientDetail() {
                     </div>
 
                     {/* AI Summary */}
-                    {record && (
+                    {aiSummary && (
                         <div className="card ai-summary-card">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                                 <div style={{ width: 28, height: 28, background: 'var(--purple-bg)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--purple)' }}>
@@ -214,7 +244,7 @@ export default function PatientDetail() {
                                 <h3 style={{ fontSize: 14, fontWeight: 700 }}>Resumo IA</h3>
                                 <span className="badge badge-purple" style={{ marginLeft: 'auto', fontSize: 10 }}>Atualizado</span>
                             </div>
-                            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7 }}>{record.aiSummary}</p>
+                            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7 }}>{aiSummary}</p>
                         </div>
                     )}
                 </div>
@@ -228,9 +258,9 @@ export default function PatientDetail() {
                         </button>
                     </div>
 
-                    {record ? (
+                    {consultations.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            {record.consultations.map((c, i) => (
+                            {consultations.map((c, i) => (
                                 <ConsultCard key={c.id} c={c} defaultOpen={i === 0} />
                             ))}
                         </div>

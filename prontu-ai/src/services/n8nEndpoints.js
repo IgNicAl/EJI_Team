@@ -7,7 +7,7 @@
 // For test webhooks use:  /webhook-test/...
 // For production use:     /webhook/...
 
-const N8N_BASE_URL = 'https://ignical.app.n8n.cloud';
+const N8N_BASE_URL = import.meta.env.VITE_N8N_BASE_URL || 'https://n8n-n8n.vk6aah.easypanel.host';
 
 const endpoints = {
   // ── Patient ───────────────────────────────────────

@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, UserPlus, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { createPatient } from '../services/patientService';
 import { registerPatient, WebhookError } from '../services/n8nService';
+import { useAuth } from '../context/AuthContext';
 import './Patients.css';
 
 export default function NewPatient() {
     const navigate = useNavigate();
+    const { doctor } = useAuth();
     const [form, setForm] = useState({
         name: '', dob: '', gender: '', cpf: '', phone: '', email: '',
         bloodType: '', allergies: '', chronic: '', notes: '',
@@ -23,18 +27,24 @@ export default function NewPatient() {
         setErrorMsg('');
 
         try {
-            const result = await registerPatient(form);
-            console.log('[NewPatient] n8n webhook response:', result);
-            setStatus('success');
+            if (isSupabaseConfigured() && doctor?.id) {
+                // Primary path: save to Supabase (which also triggers n8n)
+                await createPatient(form, doctor.id);
+                console.log('[NewPatient] Patient created in Supabase + n8n webhook triggered');
+            } else {
+                // Fallback: only n8n webhook
+                await registerPatient(form);
+                console.log('[NewPatient] n8n webhook response (no Supabase)');
+            }
 
-            // Navigate after brief success feedback
+            setStatus('success');
             setTimeout(() => navigate('/patients'), 1500);
         } catch (error) {
-            console.error('[NewPatient] Webhook failed:', error);
+            console.error('[NewPatient] Error:', error);
             setErrorMsg(
                 error instanceof WebhookError
-                    ? `Falha ao sincronizar com n8n após ${error.retries + 1} tentativas. Os dados foram salvos localmente.`
-                    : 'Erro inesperado ao registrar paciente.',
+                    ? `Falha ao sincronizar com n8n após ${error.retries + 1} tentativas.`
+                    : error?.message || 'Erro inesperado ao registrar paciente.',
             );
             setStatus('error');
         }
@@ -62,7 +72,9 @@ export default function NewPatient() {
             {status === 'success' && (
                 <div className="card" style={{ background: 'var(--success-bg, #ecfdf5)', border: '1px solid var(--success, #10b981)', padding: '12px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, borderRadius: 12 }}>
                     <CheckCircle2 size={18} style={{ color: '#10b981' }} />
-                    <span style={{ fontWeight: 600, color: '#065f46' }}>Paciente cadastrado e sincronizado com n8n!</span>
+                    <span style={{ fontWeight: 600, color: '#065f46' }}>
+                        {isSupabaseConfigured() ? 'Paciente cadastrado no banco e sincronizado com n8n!' : 'Paciente sincronizado com n8n!'}
+                    </span>
                 </div>
             )}
 
